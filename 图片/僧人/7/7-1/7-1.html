@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>僧人7-1</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            /* 修复全屏：html+body都占满视口，消除滚动条 */
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+        body {
+            background: #000;
+            /* 修复布局：用flex让图片真正居中，且body占满全屏 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+            margin: 0;
+            padding: 0;
+        }
+        #slide {
+            /* 修复图片：宽高适配全屏，保持比例，不超出视口，且块级元素消除间隙 */
+            max-width: 100vw;
+            max-height: 100vh;
+            object-fit: contain;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- 仅保留一个img标签，消除重复嵌套问题 -->
+    <img id="slide" src="微信图片_20251118190831_193_8.png" alt="僧人7-1">
+
+    <script>
+        const images = [
+            "微信图片_20251118190831_193_8.png",
+            "雪景图.png",
+            "交代场景.png",
+            "妇抗会.png",
+            "Frame 1.png"
+        ];
+
+        let current = 0;
+        const slide = document.getElementById('slide');
+
+        // 点击翻页：逻辑正常，保留你的上级目录跳转路径
+        document.body.addEventListener('click', function() {
+            if (current < images.length - 1) {
+                current++;
+                slide.src = images[current];
+            } else {
+                window.location.href = "../7-2/7-2.html";
+            }
+        });
+
+        // 键盘控制：删除重复代码，逻辑正常，保留你的跳转路径
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                if (current < images.length - 1) {
+                    current++;
+                    slide.src = images[current];
+                } else {
+                    window.location.href = "../7-2/7-2.html";
+                }
+            } else if (e.key === 'ArrowLeft') {
+                if (current > 0) {
+                    current--;
+                    slide.src = images[current];
+                }
+            } else if (e.key === 'Escape') {
+                current = 0;
+                slide.src = images[current];
+            }
+        });
+    </script>
+</body>
+</html>

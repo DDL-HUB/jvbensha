@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>剧情选择 - 军衣&急救线（最终逻辑版）</title>
+    <style>
+        /* 全局重置 & 基础配置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Noto Serif SC', serif;
+            background: #000;
+            min-height: 100vh;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        /* 场景容器 - 全屏占满，淡入淡出过渡 */
+        .scene {
+            position: absolute;
+            width: 100vw;
+            height: 100vh;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            z-index: 1;
+        }
+        .scene.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* 背景容器 + 场景图片 - 全屏保比例覆盖 */
+        .bg-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        .scene-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            pointer-events: none;
+            user-drag: none;
+            -webkit-user-drag: none;
+        }
+
+        /* 按钮容器 - 选择页专属 */
+        .choice-btn-wrap {
+            position: absolute;
+            bottom: 42%;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 80px;
+            z-index: 10;
+        }
+        .trust-btn-wrap {
+            position: absolute;
+            bottom: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+
+        /* 选择按钮 - 匹配图中样式 */
+        .choice-btn {
+            font-size: 2.6rem;
+            font-weight: 600;
+            color: #3a3a3a;
+            background: #fff;
+            border: 4px solid #888;
+            border-radius: 45px;
+            padding: 22px 50px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .choice-btn:hover {
+            transform: translateY(-2px);
+            border-color: #777;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+        .choice-btn:active, .choice-btn.pressed {
+            transform: scale(0.97);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1), inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* 信任按钮 - 最终页专属 */
+        .trust-btn {
+            font-size: 2.8rem;
+            font-weight: 500;
+            color: #4a4a4a;
+            background: #fff;
+            border: 4px solid #8B5CF6;
+            border-radius: 18px;
+            padding: 15px 55px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            box-shadow: 0 5px 15px rgba(139,92,246,0.3);
+        }
+        .trust-btn:hover {
+            transform: scale(1.03);
+            border-color: #8A5DC8;
+            box-shadow: 0 5px 15px rgba(147,112,219,0.3);
+        }
+        .trust-btn:active, .trust-btn.pressed {
+            transform: scale(0.98);
+            box-shadow: 0 2px 6px rgba(147,112,219,0.25), inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        /* 按钮波纹效果 */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(147, 112, 219, 0.3);
+            transform: scale(0);
+            animation: ripple 0.6s ease-out;
+            pointer-events: none;
+        }
+        .choice-btn .ripple {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        @keyframes ripple {
+            to { transform: scale(8); opacity: 0; }
+        }
+
+        /* 信任值弹出层 */
+        .trust-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            font-family: 'Ma Shan Zheng', cursive;
+            font-size: 4.5rem;
+            color: #ffd700;
+            text-shadow: 0 0 15px #ffd700, 0 0 30px rgba(255,215,0,0.6), 3px 3px 6px #000;
+            z-index: 100;
+            pointer-events: none;
+            opacity: 0;
+        }
+        .trust-popup.show {
+            animation: trustPopup 1.8s ease-out forwards;
+        }
+        @keyframes trustPopup {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            15% { transform: scale(1.3); opacity: 1; }
+            30% { transform: scale(1); opacity: 1; }
+            70% { transform: scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -120%); opacity: 0; }
+        }
+
+        /* 屏幕闪烁层 */
+        .screen-flash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle, rgba(255,215,0,0.4) 0%, rgba(255,215,0,0) 70%);
+            z-index: 98;
+            pointer-events: none;
+            opacity: 0;
+        }
+        .screen-flash.flash {
+            animation: screenFlash 0.4s ease-out;
+        }
+        @keyframes screenFlash {
+            0% { opacity: 0.7; }
+            50% { opacity: 0.4; }
+            100% { opacity: 0; }
+        }
+
+        /* 粒子效果 */
+        .particle {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 99;
+        }
+
+        /* 响应式适配 */
+        @media (max-width: 900px) {
+            .choice-btn-wrap {
+                flex-direction: column;
+                gap: 15px;
+                bottom: 25%;
+            }
+            .choice-btn {
+                font-size: 1rem;
+                padding: 12px 24px;
+            }
+            .trust-btn {
+                font-size: 1.1rem;
+                padding: 10px 35px;
+            }
+            .trust-popup {
+                font-size: 3rem;
+            }
+        }
+        @media (max-width: 600px) {
+            .choice-btn {
+                font-size: 0.9rem;
+                padding: 10px 20px;
+                border-radius: 25px;
+            }
+            .trust-btn {
+                font-size: 1rem;
+                padding: 10px 30px;
+                border-radius: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 音频资源 -->
+    <audio id="clickSound" preload="auto">
+        <source src="mixkit-handgun-click-1660.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="trustSound" preload="auto">
+        <source src="mixkit-handgun-click-1660.mp3" type="audio/mpeg">
+    </audio>
+    
+    <!-- 信任特效层 -->
+    <div class="screen-flash" id="screenFlash"></div>
+    <div class="trust-popup" id="trustPopup"></div>
+
+    <!-- ============= 所有场景定义（100%匹配最新逻辑）============= -->
+    <!-- s1：初始选择页 -->
+    <div class="scene active" id="s1">
+        <div class="bg-container">
+            <img src="文字背景图2.png" class="scene-img" alt="初始选择背景" onError="console.error('图片加载失败：文字背景图2.png')">
+            <div class="choice-btn-wrap">
+                <button class="choice-btn" onclick="toScene('s2', event)">参与军衣的缝制与染色</button>
+                <button class="choice-btn" onclick="toScene('s9', event)">学习急救知识并接受检验</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- s2：军衣剧情1 → 跳s3 -->
+    <div class="scene" id="s2" data-next="s3">
+        <div class="bg-container">
+            <img src="制作军衣1.png" class="scene-img" alt="制作军衣1" onError="console.error('图片加载失败：制作军衣1.png')">
+        </div>
+    </div>
+
+    <!-- s3：军衣剧情2 → 跳s4 -->
+    <div class="scene" id="s3" data-next="s4">
+        <div class="bg-container">
+            <img src="制作军衣2.png" class="scene-img" alt="制作军衣2" onError="console.error('图片加载失败：制作军衣2.png')">
+        </div>
+    </div>
+
+    <!-- s4：军衣剧情3 → 跳s5 -->
+    <div class="scene" id="s4" data-next="s5">
+        <div class="bg-container">
+            <img src="制作军衣3.png" class="scene-img" alt="制作军衣3" onError="console.error('图片加载失败：制作军衣3.png')">
+        </div>
+    </div>
+
+    <!-- s5：军衣剧情4 → 跳s6（军衣选择页）| 急救线+20跳至此，直连s18 -->
+    <div class="scene" id="s5" data-next="s6">
+        <div class="bg-container">
+            <img src="制作军衣4.png" class="scene-img" alt="制作军衣4" onError="console.error('图片加载失败：制作军衣4.png')">
+        </div>
+    </div>
+
+    <!-- s6：军衣线专属选择页【+10→s18 / +20→s9】 -->
+    <div class="scene" id="s6">
+        <div class="bg-container">
+            <img src="文字背景图2.png" class="scene-img" alt="军衣选择背景" onError="console.error('图片加载失败：文字背景图2.png')">
+            <div class="choice-btn-wrap">
+                <button class="choice-btn" onclick="showTrust(10, 's18', event)">信任+10 继续剧情</button>
+                <button class="choice-btn" onclick="showTrust(20, 's9', event)">信任+20 学习急救</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- s9：急救剧情1 → 跳s10 -->
+    <div class="scene" id="s9" data-next="s10">
+        <div class="bg-container">
+            <img src="急救学习1.png" class="scene-img" alt="急救学习1" onError="console.error('图片加载失败：急救学习1.png')">
+        </div>
+    </div>
+
+    <!-- s10：急救剧情2 → 跳s11 -->
+    <div class="scene" id="s10" data-next="s11">
+        <div class="bg-container">
+            <img src="Frame 1.png" class="scene-img" alt="Frame1" onError="console.error('图片加载失败：Frame 1.png')">
+        </div>
+    </div>
+
+    <!-- s11：急救剧情3 → 跳s12 -->
+    <div class="scene" id="s11" data-next="s12">
+        <div class="bg-container">
+            <img src="Frame 2.png" class="scene-img" alt="Frame2" onError="console.error('图片加载失败：Frame 2.png')">
+        </div>
+    </div>
+
+    <!-- s12：急救剧情4 → 跳s13 -->
+    <div class="scene" id="s12" data-next="s13">
+        <div class="bg-container">
+            <img src="Frame 3.png" class="scene-img" alt="Frame3" onError="console.error('图片加载失败：Frame 3.png')">
+        </div>
+    </div>
+
+    <!-- s13：急救剧情5 → 跳s14 -->
+    <div class="scene" id="s13" data-next="s14">
+        <div class="bg-container">
+            <img src="Frame 4.png" class="scene-img" alt="Frame4" onError="console.error('图片加载失败：Frame 4.png')">
+        </div>
+    </div>
+
+    <!-- s14：急救剧情6 → 跳s15 -->
+    <div class="scene" id="s14" data-next="s15">
+        <div class="bg-container">
+            <img src="Frame 5.png" class="scene-img" alt="Frame5" onError="console.error('图片加载失败：Frame 5.png')">
+        </div>
+    </div>
+
+    <!-- s15：急救剧情7 → 跳s16（急救选择页）| 军衣线+20跳至此，直连s18 -->
+    <div class="scene" id="s15" data-next="s16">
+        <div class="bg-container">
+            <img src="Frame 6.png" class="scene-img" alt="Frame6" onError="console.error('图片加载失败：Frame 6.png')">
+        </div>
+    </div>
+
+    <!-- s16：急救线专属选择页【+10→s18 / +20→s2】 -->
+    <div class="scene" id="s16">
+        <div class="bg-container">
+            <img src="文字背景图2.png" class="scene-img" alt="急救选择背景" onError="console.error('图片加载失败：文字背景图2.png')">
+            <div class="choice-btn-wrap">
+                <button class="choice-btn" onclick="showTrust(10, 's18', event)">信任+10 继续剧情</button>
+                <button class="choice-btn" onclick="showTrust(20, 's2', event)">信任+20 参与军衣</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- s18：全局最终页 → 跳外部URL 8.html -->
+    <div class="scene" id="s18">
+        <div class="bg-container">
+            <img src="交代场景.png" class="scene-img" alt="最终交代场景" onError="console.error('图片加载失败：交代场景.png')">
+            <div class="trust-btn-wrap">
+                <button class="trust-btn" onclick="showTrust(0, '../../8/8.html', event, true)">继续</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局状态 - 简化并增加调试标识
+        let currentScene = 's1';
+        let isLocked = false; // 重命名锁变量，避免语义混淆
+        // 动画时长常量 - 与CSS严格一致
+        const ANIM_DURATION = 1800;
+
+        // ================= 基础工具函数 =================
+        // 音效播放 - 容错增强
+        function playSound(soundId) {
+            const sound = document.getElementById(soundId);
+            if (!sound) return;
+            sound.currentTime = 0;
+            try { sound.play(); } catch (e) { /* 浏览器自动播放策略忽略 */ }
+        }
+
+        // 按钮波纹 - 保留原有效果
+        function createRipple(e, btn) {
+            const ripple = document.createElement('span');
+            ripple.className = 'ripple';
+            const rect = btn.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            ripple.style.width = ripple.style.height = `${size}px`;
+            ripple.style.left = `${e.clientX - rect.left - size/2}px`;
+            ripple.style.top = `${e.clientY - rect.top - size/2}px`;
+            btn.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 600);
+        }
+
+        // 粒子效果 - 保留原有效果
+        function createParticles(x, y) {
+            const count = 25;
+            const colors = ['#ffd700', '#ffffff'];
+            colors.forEach(c => {
+                for (let i = 0; i < count/2; i++) {
+                    const p = document.createElement('div');
+                    p.className = 'particle';
+                    const s = Math.random()*12 +4;
+                    p.style.width = p.style.height = `${s}px`;
+                    p.style.background = c;
+                    p.style.left = `${x}px`;
+                    p.style.top = `${y}px`;
+                    p.style.boxShadow = `0 0 ${s*1.5}px ${c}`;
+                    document.body.appendChild(p);
+                    const angle = Math.random()*Math.PI*2;
+                    const v = Math.random()*80 +40;
+                    let posX = x, posY = y, opa = 1;
+                    const animate = () => {
+                        posX += Math.cos(angle)*v*0.02;
+                        posY += Math.sin(angle)*v*0.02;
+                        opa -= 0.02;
+                        p.style.left = `${posX}px`;
+                        p.style.top = `${posY}px`;
+                        p.style.opacity = opa;
+                        opa > 0 ? requestAnimationFrame(animate) : p.remove();
+                    };
+                    requestAnimationFrame(animate);
+                }
+            });
+        }
+
+        // ================= 核心场景切换 - 彻底重构 =================
+        function switchScene(targetSceneId) {
+            // 1. 基础校验：锁/同场景/目标不存在
+            if (isLocked || currentScene === targetSceneId || !document.getElementById(targetSceneId)) {
+                console.log('跳转拦截：', {isLocked, currentScene, targetSceneId});
+                return;
+            }
+            console.log('开始跳转：', currentScene, '→', targetSceneId);
+            
+            // 2. 加锁 + 隐藏当前场景 + 显示目标场景
+            isLocked = true;
+            document.getElementById(currentScene).classList.remove('active');
+            document.getElementById(targetSceneId).classList.add('active');
+            
+            // 3. 延迟解锁（匹配CSS场景过渡0.3s）+ 更新当前场景
+            setTimeout(() => {
+                currentScene = targetSceneId;
+                isLocked = false;
+                console.log('跳转完成：当前场景→', currentScene);
+            }, 300);
+        }
+
+        // ================= 普通按钮跳转（无信任值）=================
+        function toScene(target, e) {
+            if (isLocked) return;
+            // 按钮特效：波纹+按压+音效
+            const btn = e.target;
+            createRipple(e, btn);
+            btn.classList.add('pressed');
+            playSound('clickSound');
+            setTimeout(() => btn.classList.remove('pressed'), 150);
+            // 延迟跳转（匹配波纹动画）
+            setTimeout(() => switchScene(target), 200);
+        }
+
+        // ================= 信任按钮跳转（有特效）=================
+        function showTrust(score, target, e, isFinal = false) {
+            if (isLocked) return;
+            const btn = e.target;
+            // 1. 按钮基础特效
+            createRipple(e, btn);
+            btn.classList.add('pressed');
+            playSound('trustSound');
+            setTimeout(() => btn.classList.remove('pressed'), 150);
+
+            // 2. 信任值特效（score>0时）
+            if (score > 0) {
+                // 屏幕闪烁
+                const flash = document.getElementById('screenFlash');
+                flash.classList.add('flash');
+                setTimeout(() => flash.classList.remove('flash'), 400);
+                // 粒子效果
+                const rect = btn.getBoundingClientRect();
+                createParticles(rect.left + rect.width/2, rect.top + rect.height/2);
+                // 信任值弹窗
+                const popup = document.getElementById('trustPopup');
+                popup.textContent = `信任 +${score}`;
+                popup.classList.remove('show');
+                void popup.offsetWidth; // 强制重绘，解决动画不触发问题
+                popup.classList.add('show');
+            }
+
+            // 3. 核心：动画结束后跳转 - 绝对保证执行
+            setTimeout(() => {
+                if (isFinal) {
+                    // 最终页跳外部URL
+                    window.location.href = target;
+                } else {
+                    // 场景内跳转 - 强制执行（忽略临时锁）
+                    isLocked = false; // 强制解锁，防止特效导致锁死
+                    switchScene(target);
+                }
+            }, score > 0 ? ANIM_DURATION : 300);
+        }
+
+        // ================= 剧情页点击空白跳转 =================
+        document.addEventListener('click', function(e) {
+            // 排除：锁/按钮/按钮子元素/特效层，防止误触跳转
+            if (isLocked || e.target.closest('button') || e.target.id === 'screenFlash' || e.target.id === 'trustPopup') {
+                return;
+            }
+            // 执行跳转：仅当当前场景有data-next属性时
+            const currentEl = document.getElementById(currentScene);
+            if (currentEl && currentEl.dataset.next) {
+                switchScene(currentEl.dataset.next);
+            }
+        });
+
+        // ================= 兜底解锁 - 防止任何情况锁死 =================
+        // 页面加载完成解锁
+        window.onload = function() {
+            isLocked = false;
+            console.log('页面加载完成，初始状态解锁');
+        };
+        // 窗口失焦/聚焦解锁
+        window.addEventListener('blur', () => { isLocked = false; });
+        window.addEventListener('focus', () => { isLocked = false; });
+        // 按任意键解锁（应急方案）
+        document.addEventListener('keydown', () => { isLocked = false; });
+    </script>
+</body>
+</html>

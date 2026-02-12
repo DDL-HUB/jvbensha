@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>选择你的角色</title>
+    <style>
+        /* --- 全局样式 --- */
+        html, body {
+            width: 100vw;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            /* 背景颜色：当前是深红色，你可以修改 hex 色值 */
+            background-color: #e63946;
+            overflow: hidden; /* 禁止出现滚动条 */
+            font-family: "Microsoft Yahei", sans-serif; /* 强制使用微软雅黑/黑体 */
+            overscroll-behavior: none; /* 【关键】禁止微信下拉回弹 */
+            -webkit-user-select: none; /* 禁止长按选中文字 */
+            user-select: none;
+            touch-action: manipulation; /* 优化点击响应速度 */
+        }
+
+        /* --- 主容器：控制整体内边距 --- */
+        .role-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column; /* 垂直排列：标题在上，按钮在下 */
+            padding: 4vw; /* 页面四周留白 4% */
+            box-sizing: border-box; /* 确保 padding 不会撑大页面 */
+        }
+
+        /* --- 标题样式 --- */
+        .title {
+            /* 字体大小随屏幕宽度缩放 */
+            font-size: 5vw; 
+            font-weight: bold;
+            color: #fff; /* 字体白色 */
+            text-align: center;
+            margin-top: 5vh;    /* 距离顶部的距离 */
+            margin-bottom: 5vh; /* 距离下方按钮的距离 */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3); /* 文字加一点阴影，更有质感 */
+        }
+
+        /* --- 按钮网格区域 --- */
+        .role-grid {
+            display: flex;
+            justify-content: space-between; /* 左右两列撑开 */
+            flex-grow: 1; /* 占满剩余的高度 */
+            gap: 4vw; /* 左右两列之间的间距 */
+            padding-bottom: 5vh; /* 底部留白，防止太贴底 */
+        }
+
+        /* --- 列容器 (左右各一列) --- */
+        .col {
+            width: 48%; /* 每列占宽度的 48% */
+            display: flex;
+            flex-direction: column; /* 按钮竖着排 */
+            justify-content: center; /* 垂直居中 */
+            gap: 3vh; /* 按钮之间的垂直间距 */
+        }
+
+        /* --- 角色按钮通用样式 --- */
+        .role-btn {
+            width: 100%;
+            /* 智能高度：最小50px，最大100px，中间随屏幕变高 */
+            height: clamp(50px, 10vh, 100px); 
+            line-height: clamp(50px, 10vh, 100px); /* 让文字垂直居中 */
+            
+            border-radius: 15px; /* 圆角大小 */
+            background-color: #fff; /* 按钮背景：白色 */
+            color: #e63946; /* 按钮文字：红色 */
+            
+            /* 智能字体：最小16px，最大24px */
+            font-size: clamp(16px, 4vw, 24px); 
+            font-weight: bold;
+            border: none;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2); /* 按钮阴影 */
+            
+            /* 动画过渡配置 */
+            transition: transform 0.1s, background-color 0.2s;
+            -webkit-tap-highlight-color: transparent; /* 去除手机点击时的高亮色块 */
+        }
+
+        /* --- 按钮按下时的效果 --- */
+        .role-btn:active {
+            transform: scale(0.95); /* 按下缩小 5%，产生按压感 */
+            background-color: #f0f0f0; /* 按下变灰一点点 */
+        }
+
+        /* --- 【关键】手机端适配 (当屏幕宽度小于 768px 时) --- */
+        @media (max-width: 768px) {
+            .title {
+                font-size: 8vw; /* 手机上标题大一点 */
+                margin-top: 8vh;
+            }
+            .role-grid {
+                /* 手机上变成上下两行，而不是左右两列 */
+                flex-direction: column; 
+                justify-content: center;
+                gap: 2vh;
+            }
+            .col {
+                width: 100%; /* 占满宽度 */
+                flex-direction: row; /* 每一行的按钮横向排列 */
+                justify-content: space-between;
+            }
+            .role-btn {
+                width: 31%; /* 一行三个按钮，每个占约 1/3 */
+                font-size: 4.5vw; /* 手机上字体调整 */
+                height: 12vh; /* 手机按钮稍微高一点 */
+                line-height: 12vh;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="role-container">
+        <div class="title">请选择你的角色</div>
+        
+        <div class="role-grid">
+            <div class="col left-col">
+                <button class="role-btn" onclick="gotoRole(1)">商人</button>
+                <button class="role-btn" onclick="gotoRole(2)">军人</button>
+                <button class="role-btn" onclick="gotoRole(3)">日本军人</button>
+            </div>
+            
+            <div class="col right-col">
+                <button class="role-btn" onclick="gotoRole(4)">僧人</button>
+                <button class="role-btn" onclick="gotoRole(5)">文职</button>
+                <button class="role-btn" onclick="gotoRole(6)">伙计</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 角色跳转逻辑 ---
+        function gotoRole(roleId) {
+            // 这里配置角色 ID 对应的文件名
+            // 确保你的文件名和这里完全一致（注意大小写！）
+            const rolePageMap = {
+                1: 'role1.html',  // 商人
+                2: 'role2.html',  // 军人
+                3: 'role3.html',  // 日本军人
+                4: 'role4.html',  // 僧人
+                5: 'role5.html',  // 文职
+                6: 'role6.html'   // 伙计
+            };
+
+            const targetPage = rolePageMap[roleId];
+
+            if (targetPage) {
+                // 跳转到对应页面
+                window.location.href = targetPage;
+            } else {
+                // 如果文件名写错了或者没配置，弹出提示
+                alert('该角色剧情暂未开放，请选择其他角色！');
+            }
+        }
+    </script>
+</body>
+</html>

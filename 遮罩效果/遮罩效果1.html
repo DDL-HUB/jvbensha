@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>鼠标跟随渐变明暗显示背景</title>
+  <style>
+    /* 全局重置 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* 容器：占满整个屏幕，添加点击光标提示 */
+    .container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      cursor: pointer; /* 改为点击光标，提示用户可点击 */
+    }
+
+    /* 1. 背景层：确保图片完整显示 */
+    .bg-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      /* 关键：使用contain确保图片完整显示 */
+      background: url("乡约 1.png") center/contain no-repeat;
+      /* 背景色避免空白 */
+      background-color: #000;
+    }
+
+    /* 2. 渐变遮罩层：半径减小一半，亮区更集中 */
+    .mask-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      /* 核心：所有像素值减半，亮区范围缩小一半 */
+      background: radial-gradient(
+        circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(0, 0, 0, 0) 0px,                /* 鼠标中心完全透明（最亮） */
+        rgba(0, 0, 0, 0.2) 50px,             /* 50px开始轻微变暗（原100px） */
+        rgba(0, 0, 0, 0.5) 100px,            /* 100px明显变暗（原200px） */
+        rgba(0, 0, 0, 0.8) 150px,            /* 150px更暗（原300px） */
+        rgba(0, 0, 0, 0.95) 200px,           /* 200px接近全黑（原400px） */
+        rgba(0, 0, 0, 1) 250px               /* 250px完全变黑（原500px） */
+      );
+      /* 过渡效果，让鼠标移动时渐变更平滑 */
+      transition: background-position 0.05s ease;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="clickContainer">
+    <!-- 背景层 -->
+    <div class="bg-layer"></div>
+    <!-- 渐变遮罩层 -->
+    <div class="mask-layer"></div>
+  </div>
+
+  <script>
+    // 获取元素
+    const container = document.querySelector('.container');
+    const maskLayer = document.querySelector('.mask-layer');
+
+    // 鼠标移动：更新渐变中心位置
+    container.addEventListener('mousemove', (e) => {
+      const x = e.clientX; // 鼠标X坐标
+      const y = e.clientY; // 鼠标Y坐标
+
+      // 更新渐变中心位置
+      maskLayer.style.setProperty('--mouse-x', `${x}px`);
+      maskLayer.style.setProperty('--mouse-y', `${y}px`);
+    });
+
+    // 鼠标离开容器：将渐变中心移走，恢复全黑
+    container.addEventListener('mouseleave', () => {
+      maskLayer.style.setProperty('--mouse-x', '-9999px');
+      maskLayer.style.setProperty('--mouse-y', '-9999px');
+    });
+
+    // 鼠标进入容器：恢复渐变中心跟随
+    container.addEventListener('mouseenter', (e) => {
+      maskLayer.style.setProperty('--mouse-x', `${e.clientX}px`);
+      maskLayer.style.setProperty('--mouse-y', `${e.clientY}px`);
+    });
+
+    // 新增：点击容器任意位置，跳转到role14.html
+    container.addEventListener('click', () => {
+      window.location.href = '../role14.html';
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>剧情选择</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- 音频元素 -->
+    <audio id="clickSound" preload="auto">
+        <source src="mixkit-handgun-click-1660.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="trustSound" preload="auto">
+        <source src="mixkit-handgun-click-1660.mp3" type="audio/mpeg">
+    </audio>
+    
+    <!-- 屏幕闪烁效果层 -->
+    <div class="screen-flash" id="screenFlash"></div>
+    
+    <!-- 信任值弹出 -->
+    <div class="trust-popup" id="trustPopup"></div>
+    
+    <!-- 按键提示 -->
+    <div class="key-hints" id="keyHints">
+        <span class="key-hint"><kbd>1</kbd><kbd>2</kbd> 选择</span>
+        <span class="key-hint"><kbd>ESC</kbd> 返回</span>
+    </div>
+
+    <!-- 场景1: 选择页面 -->
+    <div class="scene active" id="scene1">
+        <div class="background-container">
+            <img src="scene-select.png" alt="选择背景" class="background-image">
+            
+            <div class="buttons-container">
+                <button class="choice-btn" id="choice1" onclick="makeChoice(1)">
+                    "交代个人在光华大学的经历并补充细节"
+                </button>
+                <button class="choice-btn" id="choice2" onclick="makeChoice(2)">
+                    "阐述自己对于马克思主义的理解"
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 场景2: 剧情提示1 (光华大学经历) - 信任+10 -->
+    <div class="scene" id="scene2">
+        <div class="background-container">
+            <img src="scene-2.png" alt="剧情1背景" class="background-image">
+            
+            <div class="trust-btn-container">
+                <button class="trust-btn" id="trust1" onclick="showTrust(10)">
+                    信任＋10
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 场景3: 剧情提示2 (马克思主义理解) - 信任+20 -->
+    <div class="scene" id="scene3">
+        <div class="background-container">
+            <img src="scene-1.png" alt="剧情2背景" class="background-image">
+            
+            <div class="trust-btn-container">
+                <button class="trust-btn" id="trust2" onclick="showTrust(20)">
+                    信任＋20
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 选择逻辑（原代码无改动）
+        function makeChoice(choiceId) {
+            const clickSound = document.getElementById('clickSound');
+            clickSound.play();
+            document.querySelectorAll('.scene').forEach(scene => {
+                scene.classList.remove('active');
+            });
+            if (choiceId === 1) {
+                document.getElementById('scene2').classList.add('active');
+            } else if (choiceId === 2) {
+                document.getElementById('scene3').classList.add('active');
+            }
+        }
+        // 信任值提示+跳转逻辑（移除总计、仅保留单次提示+跳转）
+        function showTrust(trustAdd) {
+            const trustSound = document.getElementById('trustSound');
+            trustSound.play();
+            const trustPopup = document.getElementById('trustPopup');
+            // 仅显示单次信任增加，移除总计
+            trustPopup.textContent = `信任值+${trustAdd}`;
+            trustPopup.classList.add('show');
+            const screenFlash = document.getElementById('screenFlash');
+            screenFlash.classList.add('flash');
+            setTimeout(() => {
+                trustPopup.classList.remove('show');
+                screenFlash.classList.remove('flash');
+                // 相对路径跳转到role12.html
+                window.location.href = "../遮罩效果/遮罩效果.html";
+            }, 1500);
+        }
+        // 键盘控制（原代码无改动）
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                window.history.back();
+            }
+            if (e.key === '1') makeChoice(1);
+            if (e.key === '2') makeChoice(2);
+        });
+    </script>
+</body>
+</html>

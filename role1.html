@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>剧本杀-角色1</title>
+    <style>
+        /* --- 全局样式优化 --- */
+        html, body {
+            background-color: #000;
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            /* 禁止微信下拉回弹 */
+            overscroll-behavior: none;
+            touch-action: manipulation;
+            /* 禁止长按选中 */
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* --- 图片容器 --- */
+        .image-wrapper {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #000;
+        }
+
+        /* --- 图片样式 --- */
+        .full-image {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain; /* 保证完整显示 */
+            display: block;
+        }
+
+        /* --- 加载提示 --- */
+        .loading-tip {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 16px;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* --- 选项容器 --- */
+        .choices-wrapper {
+            position: absolute;
+            bottom: 8vh; /* 稍微抬高 */
+            left: 0;
+            width: 100%;
+            padding: 0 5vw;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 999;
+        }
+
+        /* --- 选项按钮 --- */
+        .choice-btn {
+            padding: 15px;
+            background-color: rgba(255, 255, 255, 0.95);
+            color: #333;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 10px;
+            border: none;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transition: transform 0.1s, background-color 0.2s;
+        }
+        .choice-btn:active {
+            background-color: #ddd;
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+    <div class="image-wrapper" id="imageWrapper" onclick="switchImage()">
+        <div class="loading-tip" id="loadingTip">剧情加载中...</div>
+        <img class="full-image" id="currentImg" src="" alt="剧情图片">
+        <div class="choices-wrapper" id="choicesWrapper" style="display: none;"></div>
+    </div>
+
+    <script>
+        // --- 剧情数据 ---
+        // 【重要修复】我已经删除了原来的“第八幕1”，现在只保留到第二幕
+        const scenes = [
+            // 第一幕争执
+            {
+                name: "第一幕争执",
+                photos: [
+                    "./图片/幕/微信图片_20251118190731_187_8.png",
+                    "./图片/商人/第一幕/沈氏住宅.png",
+                    "./图片/商人/第一幕/院门口.png",
+                    "./图片/商人/第一幕/微信图片_20260130151311_394_8.png",
+                    "./图片/商人/第一幕/忍耐.png",
+                    "./图片/商人/第一幕/美人.png",
+                    "./图片/商人/第一幕/砸杯子.png",
+                    "./图片/商人/第一幕/父子争执.png",
+                    "./图片/商人/第一幕/砸杯子 (1).png"
+                ]
+            },
+            // 第一幕遇见
+            {
+                name: "第一幕遇见",
+                photos: [
+                    "./图片/商人/第一幕/Slide 16_9 - 3.jpg",
+                    "./图片/商人/第一幕/Slide 16_9 - 2.jpg",
+                    "./图片/商人/第一幕/Slide 16_9 - 1.jpg",   
+                    "./图片/商人/第一幕/Slide 16_9 - 4.jpg",
+                    "./图片/商人/第一幕/女子被日军追捕 1.jpg",
+                    "./图片/商人/第一幕/Slide 16_9 - 5.jpg"
+                ]
+            },
+            // 第一幕回忆
+            {
+                name: "第一幕回忆",
+                photos: [
+                    "./图片/商人/第一幕/image 1.jpg",
+                    "./图片/商人/第一幕/image 2.jpg",
+                    "./图片/商人/第一幕/image 3.jpg",
+                    "./图片/商人/第一幕/image 4.jpg",
+                    "./图片/商人/第一幕/image 5.jpg",
+                    "./图片/商人/第一幕/image 6.jpg",
+                    "./图片/商人/第一幕/image 7.jpg",
+                    "./图片/商人/第一幕/image 8.jpg",
+                    "./图片/商人/第一幕/image 9.jpg",
+                    "./图片/商人/第一幕/image 10.jpg",
+                    "./图片/商人/第一幕/剧情提示.jpg",
+                    "./图片/商人/第一幕/隐藏线索.jpg"
+                ]
+            },
+            // 第一幕闪回
+            {
+                name: "第一幕闪回",
+                photos: [
+                    "./图片/商人/第一幕/身份总结.jpg",
+                    "./图片/商人/第一幕/记忆闪回.jpg",
+                    "./图片/商人/第一幕/回忆.jpg",
+                    "./图片/商人/第一幕/提示胜利书局.jpg"
+                ]
+            },
+            // 第二幕暗示
+            {
+                name: "第二幕暗示",
+                photos: [
+                    "./图片/幕/微信图片_20251118190731_188_8.png",
+                    "./图片/商人/第二幕/剧情提示.png",
+                    "./图片/商人/第二幕/整理书本.png",
+                    "./图片/商人/第二幕/暗示昨日女子.png",
+                    "./图片/商人/第二幕/惊讶.png",
+                    "./图片/商人/第二幕/邀请移步.png"
+                ]
+            },
+            // 第二幕进入
+            {
+                name: "第二幕进入",
+                photos: [
+                    "./图片/商人/第二幕/随着老板进入里屋.png",
+                    "./图片/商人/第二幕/书局场景.png",
+                    "./图片/商人/第二幕/手枪咔哒.png",
+                    "./图片/商人/第二幕/询问.png",
+                    "./图片/商人/第二幕/表明诚意.png",
+                ]
+            }
+        ];
+
+        let state = {
+            currentSceneIndex: 0,
+            currentPhotoIndex: 0,
+            showChoices: false,
+            currentChoices: []
+        };
+
+        const imageWrapper = document.getElementById('imageWrapper');
+        const currentImg = document.getElementById('currentImg');
+        const choicesWrapper = document.getElementById('choicesWrapper');
+        const loadingTip = document.getElementById('loadingTip');
+
+        // Base64 错误图，防白屏
+        const errorImgSrc = "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27100%25%27%20height%3D%27100%25%27%20viewBox%3D%270%200%20800%20600%27%3E%3Crect%20fill%3D%27%23333%27%20width%3D%27800%27%20height%3D%27600%27%2F%3E%3Ctext%20fill%3D%27%23fff%27%20x%3D%2750%25%27%20y%3D%2750%25%27%20text-anchor%3D%27middle%27%20font-size%3D%2724%27%3E图片加载失败，请点击继续%3C%2Ftext%3E%3C%2Fsvg%3E";
+
+        window.onload = function() {
+            loadCurrentImage();
+        };
+
+        function loadCurrentImage() {
+            loadingTip.style.display = "block";
+            const { currentSceneIndex, currentPhotoIndex } = state;
+            
+            // 容错处理
+            if (!scenes[currentSceneIndex] || !scenes[currentSceneIndex].photos[currentPhotoIndex]) {
+                alert("剧情加载异常，请刷新页面");
+                return;
+            }
+
+            const currentScene = scenes[currentSceneIndex];
+            const currentItem = currentScene.photos[currentPhotoIndex];
+            const imgUrl = (typeof currentItem === "string" ? currentItem : currentItem.url) + "?t=" + Date.now();
+            
+            currentImg.onload = function() {
+                loadingTip.style.display = "none";
+                preloadNextImage(); // 预加载
+
+                if (typeof currentItem === "object" && currentItem.hasChoice) {
+                    state.showChoices = true;
+                    state.currentChoices = currentItem.choices;
+                    renderChoices();
+                } else {
+                    state.showChoices = false;
+                    choicesWrapper.style.display = "none";
+                }
+            };
+
+            currentImg.onerror = function() {
+                loadingTip.style.display = "none";
+                currentImg.src = errorImgSrc; 
+                if (typeof currentItem === "object" && currentItem.hasChoice) {
+                    state.showChoices = true;
+                    state.currentChoices = currentItem.choices;
+                    renderChoices();
+                }
+            };
+
+            currentImg.src = imgUrl;
+        }
+
+        // 预加载功能
+        function preloadNextImage() {
+            const currentScene = scenes[state.currentSceneIndex];
+            const nextPIndex = state.currentPhotoIndex + 1;
+            
+            if (nextPIndex < currentScene.photos.length) {
+                const nextItem = currentScene.photos[nextPIndex];
+                const url = typeof nextItem === "string" ? nextItem : nextItem.url;
+                new Image().src = url;
+            } else if (state.currentSceneIndex < scenes.length - 1) {
+                 const nextScene = scenes[state.currentSceneIndex + 1];
+                 if(nextScene.photos.length > 0){
+                     const nextItem = nextScene.photos[0];
+                     const url = typeof nextItem === "string" ? nextItem : nextItem.url;
+                     new Image().src = url;
+                 }
+            }
+        }
+
+        function switchImage() {
+            if (state.showChoices) return;
+
+            const currentScene = scenes[state.currentSceneIndex];
+            let newPhotoIndex = state.currentPhotoIndex + 1;
+            let newSceneIndex = state.currentSceneIndex;
+
+            // 【核心修改】检查是否是最后一幕的最后一张
+            // role1.html 播放完后，跳转到 role12.html (那里包含第3-7幕)
+            if (state.currentSceneIndex === scenes.length - 1 && newPhotoIndex >= currentScene.photos.length) {
+                window.location.href = "role12.html"; 
+                return;
+            }
+
+            // 翻页逻辑
+            if (newPhotoIndex >= currentScene.photos.length) {
+                newPhotoIndex = 0;
+                newSceneIndex = (state.currentSceneIndex + 1) % scenes.length;
+            }
+
+            state.currentSceneIndex = newSceneIndex;
+            state.currentPhotoIndex = newPhotoIndex;
+            loadCurrentImage();
+        }
+
+        function renderChoices() {
+            choicesWrapper.innerHTML = "";
+            choicesWrapper.style.display = "flex";
+            state.currentChoices.forEach((choice) => {
+                const btn = document.createElement('button');
+                btn.className = "choice-btn";
+                btn.innerText = choice.label;
+                btn.onclick = function(e) {
+                    e.stopPropagation(); 
+                    chooseOption(choice.nextScene, choice.nextPhotoIndex);
+                };
+                choicesWrapper.appendChild(btn);
+            });
+        }
+
+        function chooseOption(nextScene, nextPhotoIndex) {
+            const targetSceneIndex = scenes.findIndex(item => item.name === nextScene);
+            if (targetSceneIndex === -1) {
+                alert(`剧情「${nextScene}」暂未开放`);
+                return;
+            }
+            state.currentSceneIndex = targetSceneIndex;
+            state.currentPhotoIndex = nextPhotoIndex;
+            state.showChoices = false;
+            loadCurrentImage();
+        }
+    </script>
+</body>
+</html>

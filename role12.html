@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>剧本杀-角色1</title>
+    <style>
+        /* --- 全局样式优化 --- */
+        html, body {
+            background-color: #000;
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            overscroll-behavior: none;
+            touch-action: manipulation;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* --- 图片容器 --- */
+        .image-wrapper {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #000;
+        }
+
+        /* --- 图片样式 --- */
+        .full-image {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            display: block;
+        }
+
+        /* --- 加载提示 --- */
+        .loading-tip {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 16px;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* --- 选项容器 --- */
+        .choices-wrapper {
+            position: absolute;
+            bottom: 8vh;
+            left: 0;
+            width: 100%;
+            padding: 0 5vw;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 999;
+        }
+
+        /* --- 选项按钮 --- */
+        .choice-btn {
+            padding: 15px;
+            background-color: rgba(255, 255, 255, 0.95);
+            color: #333;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 10px;
+            border: none;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            transition: transform 0.1s, background-color 0.2s;
+        }
+        .choice-btn:active {
+            background-color: #ddd;
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+    <div class="image-wrapper" id="imageWrapper" onclick="switchImage()">
+        <div class="loading-tip" id="loadingTip">剧情加载中...</div>
+        <img class="full-image" id="currentImg" src="" alt="剧情图片">
+        <div class="choices-wrapper" id="choicesWrapper" style="display: none;"></div>
+    </div>
+
+    <script>
+        const scenes = [
+            // 第二幕读书学习
+            {
+                name: "第二幕读书学习",
+                photos: [
+                    "./图片/商人/第二幕/线索一提醒.png",
+                    "./图片/商人/第二幕/读书.png",
+                    "./图片/商人/第二幕/读书 初觉醒.png",
+                    "./图片/商人/第二幕/交代.png",
+                    "./图片/商人/第二幕/微信图片_20260130152656_395_8.png",
+                    "./图片/商人/第二幕/老板给账本.png",
+                ]
+            },
+            // 第三幕
+            {
+                name: "第三幕",
+                photos: [
+                    "./图片/幕/微信图片_20251118190732_189_8.png",
+                    "./图片/商人/第三幕/桥东大药房全景.png",
+                    "./图片/商人/第三幕/场景.png",
+                    "./图片/商人/第三幕/微信图片_20260130155601_396_8.png",
+                    "./图片/商人/第三幕/小剧场.png",
+                    "./图片/商人/第三幕/小剧场 (1).png",
+                    "./图片/商人/第三幕/药房内部.png",
+                    "./图片/商人/第三幕/微信图片_20260130155901_397_8.png",
+                    "./图片/商人/第三幕/紧急任务.png"
+                ]
+            },
+            // 第四幕
+            {
+                name: "第四幕",
+                photos: [
+                    "./图片/幕/微信图片_20251118190733_190_8.png",
+                    "./图片/商人/第四幕/酱菜园场景.png",
+                    "./图片/商人/第四幕/任务.png",
+                    "./图片/商人/第四幕/提示.png",
+                    "./图片/商人/第四幕/微信图片_20260130160044_398_8.png",
+                    "./图片/商人/第四幕/要求赴宴.png",
+                    "./图片/商人/第四幕/准备赴宴.png",
+                    "./图片/商人/第四幕/答应.png",
+                    "./图片/商人/第四幕/交代图片.png"
+                ]
+            },
+            // 第五幕
+            {
+                name: "第五幕",
+                photos: [
+                    "./图片/幕/微信图片_20251118190733_191_8.png",
+                    "./图片/商人/第五幕/场景书房.png",
+                    "./图片/商人/第五幕/拿文房四宝.png",
+                    "./图片/商人/第五幕/提示 字帖.png",
+                    "./图片/商人/第五幕/字帖.png",
+                    "./图片/商人/第五幕/盟友.png",
+                    "./图片/商人/第五幕/拿文房四宝 (1).png",
+                    "./图片/商人/第五幕/与日军周旋.png",
+                    "./图片/商人/第五幕/看到父亲 心酸.png",
+                    "./图片/商人/第五幕/小游戏谈判.png",
+                    "./图片/商人/第五幕/劝说.png",
+                    "./图片/商人/第五幕/理解父亲.png" 
+                ]
+            },
+            // 第六幕1
+            {
+                name: "第六幕1",
+                photos: [
+                    "./图片/幕/微信图片_20251118190734_192_8.png",
+                    "./图片/商人/第六幕/提示相认.png",
+                    "./图片/商人/第六幕/场景 郊外荒地.png",
+                    "./图片/商人/第六幕/挖掘 .png",
+                    "./图片/商人/第六幕/image 1.png",
+                    "./图片/商人/第六幕/image 2.png",
+                    "./图片/商人/第六幕/image 3.png",
+                    "./图片/商人/第六幕/image 4.png",
+                    "./图片/商人/第六幕/image 5.png",
+                    "./图片/商人/第六幕/image 6.png",
+                    "./图片/商人/第六幕/image 7.png",
+                    "./图片/商人/第六幕/image 8.png",
+                    "./图片/商人/第六幕/image 9.png"
+                ]
+            },
+            // 第六幕2
+            {
+                name: "第六幕2",
+                photos: [
+                    "./图片/商人/第六幕/image 10.png",
+                    "./图片/商人/第六幕/image 11.png",
+                    "./图片/商人/第六幕/image 12.png",
+                    "./图片/商人/第六幕/image 13.png",
+                    "./图片/商人/第六幕/image 14.png",
+                    "./图片/商人/第六幕/剧情提示 小剧场.png",
+                    "./图片/商人/第六幕/剧场.png",
+                    "./图片/商人/第六幕/改观.png",
+                    "./图片/商人/第六幕/Frame 7.png",
+                    "./图片/商人/第六幕/Frame 8.png",
+                    "./图片/商人/第六幕/安排做伙计.png"
+                ]
+            },
+            // 第七幕
+            {
+                name: "第七幕",
+                photos: [
+                    "./图片/幕/微信图片_20251118190831_193_8.png",
+                    "./图片/商人/第七幕/雪景图.png",
+                    "./图片/商人/第七幕/交代场景.png",
+                    "./图片/商人/第七幕/妇抗会.png",
+                    "./图片/商人/第七幕/Frame 1.png"
+                ]
+            }
+        ];
+
+        let state = {
+            currentSceneIndex: 0,
+            currentPhotoIndex: 0,
+            showChoices: false,
+            currentChoices: []
+        };
+
+        const imageWrapper = document.getElementById('imageWrapper');
+        const currentImg = document.getElementById('currentImg');
+        const choicesWrapper = document.getElementById('choicesWrapper');
+        const loadingTip = document.getElementById('loadingTip');
+
+        const errorImgSrc = "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27100%25%27%20height%3D%27100%25%27%20viewBox%3D%270%200%20800%20600%27%3E%3Crect%20fill%3D%27%23333%27%20width%3D%27800%27%20height%3D%27600%27%2F%3E%3Ctext%20fill%3D%27%23fff%27%20x%3D%2750%25%27%20y%3D%2750%25%27%20text-anchor%3D%27middle%27%20font-size%3D%2724%27%3E图片加载失败，请点击继续%3C%2Ftext%3E%3C%2Fsvg%3E";
+
+        window.onload = function() {
+            loadCurrentImage();
+        };
+
+        function loadCurrentImage() {
+            loadingTip.style.display = "block";
+            const { currentSceneIndex, currentPhotoIndex } = state;
+
+            if (!scenes[currentSceneIndex] || !scenes[currentSceneIndex].photos[currentPhotoIndex]) {
+                alert("剧情加载异常，请刷新页面");
+                return;
+            }
+
+            const currentScene = scenes[currentSceneIndex];
+            const currentItem = currentScene.photos[currentPhotoIndex];
+            const imgUrl = (typeof currentItem === "string" ? currentItem : currentItem.url) + "?t=" + Date.now();
+            
+            currentImg.onload = function() {
+                loadingTip.style.display = "none";
+                preloadNextImage();
+
+                if (typeof currentItem === "object" && currentItem.hasChoice) {
+                    state.showChoices = true;
+                    state.currentChoices = currentItem.choices;
+                    renderChoices();
+                } else {
+                    state.showChoices = false;
+                    choicesWrapper.style.display = "none";
+                }
+            };
+
+            currentImg.onerror = function() {
+                loadingTip.style.display = "none";
+                currentImg.src = errorImgSrc;
+                if (typeof currentItem === "object" && currentItem.hasChoice) {
+                    state.showChoices = true;
+                    state.currentChoices = currentItem.choices;
+                    renderChoices();
+                }
+            };
+
+            currentImg.src = imgUrl;
+        }
+
+        function preloadNextImage() {
+            const currentScene = scenes[state.currentSceneIndex];
+            const nextPIndex = state.currentPhotoIndex + 1;
+            
+            if (nextPIndex < currentScene.photos.length) {
+                const nextItem = currentScene.photos[nextPIndex];
+                const url = typeof nextItem === "string" ? nextItem : nextItem.url;
+                new Image().src = url;
+            } else if (state.currentSceneIndex < scenes.length - 1) {
+                 const nextScene = scenes[state.currentSceneIndex + 1];
+                 if(nextScene.photos.length > 0){
+                     const nextItem = nextScene.photos[0];
+                     const url = typeof nextItem === "string" ? nextItem : nextItem.url;
+                     new Image().src = url;
+                 }
+            }
+        }
+
+        function switchImage() {
+            if (state.showChoices) return;
+
+            const currentScene = scenes[state.currentSceneIndex];
+            let newPhotoIndex = state.currentPhotoIndex + 1;
+            let newSceneIndex = state.currentSceneIndex;
+
+            // 【关键修改】检查是否到了结尾
+            // 当 role12 播放完后，跳转到 role13.html
+            if (state.currentSceneIndex === scenes.length - 1 && newPhotoIndex >= currentScene.photos.length) {
+                window.location.href = "role13.html"; 
+                return;
+            }
+
+            // 正常翻页
+            if (newPhotoIndex >= currentScene.photos.length) {
+                newPhotoIndex = 0;
+                newSceneIndex = (state.currentSceneIndex + 1) % scenes.length;
+            }
+
+            state.currentSceneIndex = newSceneIndex;
+            state.currentPhotoIndex = newPhotoIndex;
+            loadCurrentImage();
+        }
+
+        function renderChoices() {
+            choicesWrapper.innerHTML = "";
+            choicesWrapper.style.display = "flex";
+            state.currentChoices.forEach((choice) => {
+                const btn = document.createElement('button');
+                btn.className = "choice-btn";
+                btn.innerText = choice.label;
+                btn.onclick = function(e) {
+                    e.stopPropagation();
+                    chooseOption(choice.nextScene, choice.nextPhotoIndex);
+                };
+                choicesWrapper.appendChild(btn);
+            });
+        }
+
+        function chooseOption(nextScene, nextPhotoIndex) {
+            const targetSceneIndex = scenes.findIndex(item => item.name === nextScene);
+            if (targetSceneIndex === -1) {
+                alert(`剧情「${nextScene}」暂未开放`);
+                return;
+            }
+            state.currentSceneIndex = targetSceneIndex;
+            state.currentPhotoIndex = nextPhotoIndex;
+            state.showChoices = false;
+            loadCurrentImage();
+        }
+    </script>
+</body>
+</html>

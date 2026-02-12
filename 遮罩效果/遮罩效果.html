@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>点击进入鼠标跟随渐变界面</title>
+  <style>
+    /* 全局重置 */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* 初始图片页面：全屏显示、点击光标 */
+    .init-page {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: #000;
+      z-index: 10;
+      cursor: pointer;
+    }
+    .init-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    /* 鼠标跟随渐变界面：默认隐藏，点击后显示 */
+    .container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      cursor: none; /* 隐藏原生鼠标 */
+      display: none;
+    }
+
+    /* 背景层：替换为图一相对路径，完整显示 */
+    .bg-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url("image 1.png") center/contain no-repeat;
+      background-color: #000;
+    }
+
+    /* 渐变遮罩层：原亮区集中效果保留 */
+    .mask-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(
+        circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(0, 0, 0, 0) 0px,
+        rgba(0, 0, 0, 0.2) 50px,
+        rgba(0, 0, 0, 0.5) 100px,
+        rgba(0, 0, 0, 0.8) 150px,
+        rgba(0, 0, 0, 0.95) 200px,
+        rgba(0, 0, 0, 1) 250px
+      );
+      transition: background-position 0.05s ease;
+    }
+  </style>
+</head>
+<body>
+  <!-- 初始页面：显示图二的图片，点击任意位置触发跳转 -->
+  <div class="init-page" id="initPage">
+    <img src="读书文字.png" alt="初始图片" class="init-img">
+  </div>
+
+  <!-- 鼠标跟随渐变界面：原代码完整保留 -->
+  <div class="container" id="container">
+    <div class="bg-layer"></div>
+    <div class="mask-layer" id="maskLayer"></div>
+  </div>
+
+  <script>
+    // 获取元素
+    const initPage = document.getElementById('initPage');
+    const container = document.getElementById('container');
+    const maskLayer = document.getElementById('maskLayer');
+
+    // 核心：点击初始页面任意位置，隐藏初始页、显示渐变交互页
+    initPage.addEventListener('click', () => {
+      initPage.style.display = 'none';
+      container.style.display = 'block';
+    });
+
+    // 鼠标跟随渐变逻辑（原代码无任何修改）
+    container.addEventListener('mousemove', (e) => {
+      const x = e.clientX;
+      const y = e.clientY;
+      maskLayer.style.setProperty('--mouse-x', `${x}px`);
+      maskLayer.style.setProperty('--mouse-y', `${y}px`);
+    });
+    container.addEventListener('mouseleave', () => {
+      maskLayer.style.setProperty('--mouse-x', '-9999px');
+      maskLayer.style.setProperty('--mouse-y', '-9999px');
+    });
+    container.addEventListener('mouseenter', (e) => {
+      maskLayer.style.setProperty('--mouse-x', `${e.clientX}px`);
+      maskLayer.style.setProperty('--mouse-y', `${e.clientY}px`);
+    });
+
+    // 新增：点击渐变界面任意位置，跳转到role12.html（相对路径）
+    container.addEventListener('click', () => {
+      // 从“遮罩效果”目录，跳转到上级“网页代码”目录下的role12.html
+      window.location.href = "../role12.html";
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>剧本杀-角色1</title>
+    <style>
+        /* --- 全局样式优化 --- */
+        html, body {
+            background-color: #000;
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            /* 禁止微信下拉回弹 */
+            overscroll-behavior: none;
+            touch-action: manipulation;
+            /* 禁止长按选中 */
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* --- 图片容器 --- */
+        .image-wrapper {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #000;
+        }
+
+        /* --- 图片样式 --- */
+        .full-image {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain; /* 保证完整显示 */
+            display: block;
+        }
+
+        /* --- 加载提示 --- */
+        .loading-tip {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 16px;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* role13似乎没有选项，但为了代码兼容性保留样式，设为不可见 */
+        .choices-wrapper { 
+            display: none; 
+        }
+    </style>
+</head>
+<body>
+    <div class="image-wrapper" id="imageWrapper" onclick="switchImage()">
+        <div class="loading-tip" id="loadingTip">剧情加载中...</div>
+        <img class="full-image" id="currentImg" src="" alt="剧情图片">
+        <div class="choices-wrapper" id="choicesWrapper"></div>
+    </div>
+
+    <script>
+        // --- 剧情数据 (保留 role13.html 的原始内容) ---
+        const scenes = [
+            // 第八幕1
+            {
+                name: "第八幕1",
+                photos: [
+                    "./图片/幕/微信图片_20251118190833_194_8.png",
+                    "./图片/商人/第八幕/开场.png",
+                    "./图片/商人/第八幕/大桥镇雪景.png",
+                    "./图片/商人/第八幕/窗前转身.png",
+                    "./图片/商人/第八幕/提示.png",
+                    "./图片/商人/第八幕/提示 (1).png",
+                    "./图片/商人/第八幕/烟斗.png",
+                    "./图片/商人/第八幕/提示 (2).png",
+                    "./图片/商人/第八幕/Group 6.png",
+                    "./图片/商人/第八幕/Group 10.png",
+                    "./图片/商人/第八幕/Group 11.png",
+                    "./图片/商人/第八幕/Group 5.png",
+                    "./图片/商人/第八幕/截屏2025-11-06 21.32.06 1.png",
+                    "./图片/商人/第八幕/Frame 2.png"
+                ]
+            }
+        ];
+
+        // --- 状态管理 ---
+        let state = {
+            currentSceneIndex: 0,
+            currentPhotoIndex: 0,
+            showChoices: false,
+            currentChoices: []
+        };
+
+        const imageWrapper = document.getElementById('imageWrapper');
+        const currentImg = document.getElementById('currentImg');
+        const loadingTip = document.getElementById('loadingTip');
+
+        // Base64 错误图
+        const errorImgSrc = "data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%27100%25%27%20height%3D%27100%25%27%20viewBox%3D%270%200%20800%20600%27%3E%3Crect%20fill%3D%27%23333%27%20width%3D%27800%27%20height%3D%27600%27%2F%3E%3Ctext%20fill%3D%27%23fff%27%20x%3D%2750%25%27%20y%3D%2750%25%27%20text-anchor%3D%27middle%27%20font-size%3D%2724%27%3E图片加载失败，请点击继续%3C%2Ftext%3E%3C%2Fsvg%3E";
+
+        // 初始化
+        window.onload = function() {
+            loadCurrentImage();
+        };
+
+        function loadCurrentImage() {
+            loadingTip.style.display = "block";
+            const { currentSceneIndex, currentPhotoIndex } = state;
+
+            // 容错检查
+            if (!scenes[currentSceneIndex] || !scenes[currentSceneIndex].photos[currentPhotoIndex]) {
+                alert("剧情加载异常，请刷新页面");
+                return;
+            }
+
+            const currentScene = scenes[currentSceneIndex];
+            const currentItem = currentScene.photos[currentPhotoIndex];
+            const imgUrl = (typeof currentItem === "string" ? currentItem : currentItem.url) + "?t=" + Date.now();
+            
+            // 加载成功
+            currentImg.onload = function() {
+                loadingTip.style.display = "none";
+                // 预加载下一张
+                preloadNextImage();
+            };
+
+            // 加载失败
+            currentImg.onerror = function() {
+                loadingTip.style.display = "none";
+                currentImg.src = errorImgSrc;
+            };
+
+            currentImg.src = imgUrl;
+        }
+
+        // 预加载功能
+        function preloadNextImage() {
+            const currentScene = scenes[state.currentSceneIndex];
+            const nextPIndex = state.currentPhotoIndex + 1;
+            
+            // 只需要检查本幕的下一张，因为只有一个场景
+            if (nextPIndex < currentScene.photos.length) {
+                const nextItem = currentScene.photos[nextPIndex];
+                const url = typeof nextItem === "string" ? nextItem : nextItem.url;
+                new Image().src = url;
+            } 
+        }
+
+        function switchImage() {
+            const currentScene = scenes[state.currentSceneIndex];
+            let newPhotoIndex = state.currentPhotoIndex + 1;
+
+            // 检查是否到了结尾
+            if (newPhotoIndex >= currentScene.photos.length) {
+                // 跳转到遮罩效果1.html
+                window.location.href = "./遮罩效果/遮罩效果1.html";
+                return;
+            }
+
+            // 翻页
+            state.currentPhotoIndex = newPhotoIndex;
+            loadCurrentImage();
+        }
+    </script>
+</body>
+</html>

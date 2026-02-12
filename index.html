@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>剧本杀</title>
+    <style>
+        /* 全局样式：去除默认边距，设置黑色背景 */
+        html, body {
+            width: 100vw;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            overflow: hidden; /* 禁止出现滚动条 */
+            /* 关键修改：禁止微信浏览器的下拉回弹（橡皮筋效果） */
+            overscroll-behavior: none;
+            touch-action: none; /* 禁止默认触摸行为 */
+        }
+        
+        /* 父容器：作为定位基准 */
+        .img-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* 背景图：保持比例覆盖整个屏幕 */
+        .full-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* 保证图片铺满且不变形 */
+            display: block;
+            pointer-events: none; /* 禁止长按保存图片，提升像App一样的体验 */
+        }
+        
+        /* 按钮样式：完全响应式 */
+        .btn {
+            position: absolute;
+            /* 使用 vw/vh 单位，确保在不同屏幕位置一致 */
+            bottom: 11vh;    
+            right: 18vw;     
+            width: 19vw;   
+            height: 12vh;    
+            line-height: 12vh; /* 文字垂直居中 */
+            
+            background-color: rgb(201, 78, 78);
+            color: white;
+            border-radius: 1.5vh;
+            text-align: center;
+            cursor: pointer;
+            font-size: 1.6vw; 
+            font-weight: bold;
+            z-index: 999;    
+            border: none;    
+            padding: 0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5); /* 增加一点阴影让它更像按钮 */
+            
+            /* 触摸反馈 */
+            transition: transform 0.1s, background-color 0.2s;
+            -webkit-tap-highlight-color: transparent; /* 去除手机点击的高亮背景 */
+        }
+        
+        /* 按钮按下时的效果 */
+        .btn:active {
+            transform: scale(0.95);
+            background-color: rgb(180, 60, 60);
+        }
+        
+        /* 手机竖屏适配优化 */
+        @media (max-width: 768px) {
+            .btn {
+                font-size: 4vw;   /* 手机字体调大 */
+                width: 30vw;      /* 手机按钮变宽，方便手指点击 */
+                height: 7vh;      
+                line-height: 7vh; 
+                border-radius: 3.5vh;
+                right: 10vw;      /* 稍微靠右一点 */
+                bottom: 10vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="img-container">
+        <img src="./图片/封面/Frame 1.png" class="full-img" alt="剧本杀封面">
+        
+        <button class="btn" onclick="navigateToIndex2()">进入剧本杀</button>
+    </div>
+
+    <script>
+        function navigateToIndex2() {
+            // 简单的页面跳转
+            window.location.href = 'index2.html';
+        }
+    </script>
+</body>
+</html>

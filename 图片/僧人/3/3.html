@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>僧人3</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #000;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none;
+        }
+        img {
+            max-width: 100%;
+            max-height: 100vh;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+    <img id="slide" src="微信图片_20251118190732_189_8.png" alt="僧人3">
+
+    <script>
+        const images = [
+	    "微信图片_20251118190732_189_8.png",
+            "桥东大药房全景.png",
+            "场景.png",
+            "剧情提示.png",
+            "小剧场.png",
+            "小剧场-1.png",
+            "药房内部.png",
+            "线索三-1.png",
+            "紧急任务.png"
+        ];
+
+        let current = 0;
+        const slide = document.getElementById('slide');
+
+        // 点击翻页：新增结尾跳转，原逻辑不变
+        document.body.addEventListener('click', function() {
+            if (current < images.length - 1) {
+                current++;
+                slide.src = images[current];
+            } else {
+                // 最后一张再次点击，跳转到4.html
+                window.location.href = "../4/4.html";
+            }
+        });
+
+        // 键盘控制：新增结尾跳转，原逻辑不变
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                if (current < images.length - 1) {
+                    current++;
+                    slide.src = images[current];
+                } else {
+                    // 最后一张按→/空格，跳转到4.html
+                    window.location.href = "../4/4.html";
+                }
+            } else if (e.key === 'ArrowLeft') {
+                if (current > 0) {
+                    current--;
+                    slide.src = images[current];
+                }
+            } else if (e.key === 'Escape') {
+                current = 0;
+                slide.src = images[current];
+            }
+        });
+    </script>
+</body>
+</html>
