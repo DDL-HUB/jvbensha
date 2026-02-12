@@ -68,7 +68,7 @@
     </audio>
 
     <div class="container">
-        <img id="slide" src="微信图片.png" alt="僧人2">
+        <img id="slide" src="微信图片.webp" alt="僧人2">
         <div id="choiceButtons" class="choice-buttons">
             <button class="btn btn-left" onclick="choose(1)"></button>
             <button class="btn btn-right" onclick="choose(2)"></button>
@@ -77,37 +77,37 @@
 
     <script>
         const mainLine = [
-	    "微信图片.png",
-            "寺庙外.png",
-            "寺庙内1 背身.png",
-            "邱明惊讶.png",
-            "寺庙内2（1）.png",
-            "寺庙内2（2）.png",
-            "寺庙内2（3）.png",
-            "寺庙内2（4）.png",
-            "寺庙内2（5）.png",
-            "寺庙内2（6）.png",
-            "邱明独白.png",
-            "Frame 2.png",
-            "任务.png",
-            "初见老板.png",
-            "小师傅.png",
-            "邱明对老板讲话.png",
-            "你是..._.png",
-            "剧情提示选择.png"
+	    "微信图片.webp",
+            "寺庙外.webp",
+            "寺庙内1 背身.webp",
+            "邱明惊讶.webp",
+            "寺庙内2（1）.webp",
+            "寺庙内2（2）.webp",
+            "寺庙内2（3）.webp",
+            "寺庙内2（4）.webp",
+            "寺庙内2（5）.webp",
+            "寺庙内2（6）.webp",
+            "邱明独白.webp",
+            "Frame 2.webp",
+            "任务.webp",
+            "初见老板.webp",
+            "小师傅.webp",
+            "邱明对老板讲话.webp",
+            "你是..._.webp",
+            "剧情提示选择.webp"
         ];
 
         const afterChoice = [
-            "账本.png",
-            "读书文字.png",
-            "讲述.png",
-            "讲述1.png",
-            "讲述1-1.png",
-            "讲述2.png",
-            "讲述3.png",
-            "讲述4.png",
-            "讲述5.png",
-            "读书文字-1.png"
+            "账本.webp",
+            "读书文字.webp",
+            "讲述.webp",
+            "讲述1.webp",
+            "讲述1-1.webp",
+            "讲述2.webp",
+            "讲述3.webp",
+            "讲述4.webp",
+            "讲述5.webp",
+            "读书文字-1.webp"
         ];
 
         let current = 0;
@@ -139,9 +139,9 @@
             
             showChoiceButtons(false);
             if (option === 1) {
-                updateImage("选择1.png");
+                updateImage("选择1.webp");
             } else {
-                updateImage("选择2.png");
+                updateImage("选择2.webp");
             }
             phase = 'after';
             afterIndex = 0;
@@ -153,7 +153,7 @@
                 if (current < mainLine.length - 1) {
                     current++;
                     updateImage(mainLine[current]);
-                    if (mainLine[current] === "剧情提示选择.png") {
+                    if (mainLine[current] === "剧情提示选择.webp") {
                         phase = 'choice';
                         showChoiceButtons(true);
                     }
@@ -186,11 +186,11 @@
                     afterIndex = 0;
                     // 回到选择画面
                     phase = 'choice';
-                    updateImage("剧情提示选择.png");
+                    updateImage("剧情提示选择.webp");
                     showChoiceButtons(true);
                 } else {
                     phase = 'choice';
-                    updateImage("剧情提示选择.png");
+                    updateImage("剧情提示选择.webp");
                     showChoiceButtons(true);
                 }
             }
